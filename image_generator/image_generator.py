@@ -15,8 +15,10 @@ GEN_FOLDER = "virtual_images/"
 MASK_FOLDER = "virtual_masks/"
 IMG_EXT = ".png"
 MIN_FG_IMAGES = 1
-MAX_FG_IMAGES = 10
+MAX_FG_IMAGES = 4
 HOW_MANY_IMAGES = 10
+IMG_HEIGHT = 256
+IMG_WIDTH = 256
 
 #Image loader
 
@@ -39,16 +41,22 @@ for infile in glob.glob(FG_FOLDER + "/*" + IMG_EXT):
 for a in range(0, HOW_MANY_IMAGES):
     #Load a background image
     im_bg = backgrounds[randint(0, len(backgrounds) - 1)]
+    
+    #Choose a subsection of the background
+    x_pos = randint(0, im_bg.size[0] - IMG_WIDTH)
+    y_pos = randint(0, im_bg.size[1] - IMG_HEIGHT)
+    im_bg = im_bg.crop((x_pos, y_pos, x_pos + IMG_WIDTH, y_pos + IMG_HEIGHT))
     bg_width, bg_height = im_bg.size
     
     #Create a blank mask based on background size
     im_mask = Image.new('RGB', im_bg.size)
     
     #Add a random number of foreground elements
-    for b in range(MIN_FG_IMAGES, randint(MIN_FG_IMAGES, MAX_FG_IMAGES) + 1):
+    for b in range(0, randint(MIN_FG_IMAGES, MAX_FG_IMAGES) + 1):
         
-        #Load a foreground image
+        #Load a foreground image and resize
         im_fg = foregrounds[randint(0, len(foregrounds) - 1)]
+        im_fg = im_fg.resize((int(IMG_WIDTH/2), int(IMG_HEIGHT/2)))
         fg_width, fg_height = im_fg.size
         
         #Convert black to transparent
@@ -61,20 +69,21 @@ for a in range(0, HOW_MANY_IMAGES):
         
         #Paste foreground on background and mask using foreground as mask
         #Get a random position
-        position_x = randint(0, max(0, bg_width - fg_width))
-        position_y = randint(0, max(0, bg_height - fg_height))
+        position_x = randint(-1 * bg_width / 8, bg_width * 7/8)
+        position_y = randint(-1 * bg_height / 8, bg_height * 7/8)
         
         im_bg.paste(im_fg, (position_x, position_y), im_fg)
         im_mask.paste(im_fg, (position_x, position_y), im_fg)
         
         #Switch mask to black and white only
+        im_mask = im_mask.convert('L')
         pixdata_mask = im_mask.load()
         for y in range(bg_height):
             for x in range(bg_width):
-                if pixdata_mask[x, y] != (0, 0, 0):
-                    pixdata_mask[x, y] = (255, 255, 255)
+                if pixdata_mask[x, y] != 0:
+                    pixdata_mask[x, y] = 1
     
     #Display / save the generated photo and its mask
     #im_bg.show()
     im_bg.save(GEN_FOLDER + "virtual_image-" + str(a) + ".jpg", "JPEG")
-    im_mask.save(MASK_FOLDER + "virtual_mask-" + str(a) + ".png", "PNG")
+    im_mask.save(MASK_FOLDER + "virtual_image-" + str(a) + ".png", "PNG", compress_level=0)
