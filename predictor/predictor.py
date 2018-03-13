@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-import numpy as np
-import cv2
+
+import sys
+sys.path.insert(0, '../segnet/')
 from SegNet import CreateSegNet
 import matplotlib.pyplot as plt
+import numpy as np
+import cv2
 
 #CONFIGURATION
-TEST_FOLDER = "test/"
+TEST_FOLDER = "../test/"
 HOW_MANY_IMAGES = 30
 IMG_HEIGHT = 256
 IMG_WIDTH = 256
@@ -29,7 +32,7 @@ imgs_comb = np.hstack( (np.asarray(i) for i in pred_imgs ) )
 # Build a network and load weights
 segnet = CreateSegNet((IMG_WIDTH, IMG_HEIGHT, 3), 2, 3, (2, 2), "softmax")
 print("Segnet built")
-segnet.load_weights('LIP_SegNet.hdf5')
+segnet.load_weights('../weights/MTI_SegNet.hdf5')
 print("Weights loaded")
 
 # Run images in the network
@@ -112,6 +115,6 @@ imgs_to_stack = [imgs_comb, results_comb, maps_comb, diffs_comb]
 imgs_total = np.vstack( (np.asarray(i) for i in imgs_to_stack ) )
 
 # Save result
-plt.imsave('combined.png', imgs_total)
+plt.imsave('../results/combined.png', imgs_total)
 
 print("Result compilation saved")

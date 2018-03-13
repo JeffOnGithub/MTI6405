@@ -4,50 +4,10 @@ from keras.layers import Input
 from keras.layers.core import Activation, Reshape
 from keras.layers.convolutional import Convolution2D
 from keras.layers.normalization import BatchNormalization
-from keras import backend as K
 from Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
 from generator import data_gen_small
-import numpy as np
 import argparse
-import json
 import pandas as pd
-
-
-def custom_error(y_true, y_pred):
-    print(y_true)
-    print(y_pred)
-    y_true = 3 * y_true
-    return K.sum(K.square(y_pred - y_true), axis=-1)
-
-def weighted_categorical_crossentropy(weights):
-    """
-    A weighted version of keras.objectives.categorical_crossentropy
-    
-    Variables:
-        weights: numpy array of shape (C,) where C is the number of classes
-    
-    Usage:
-        weights = np.array([0.5,2,10]) # Class one at 0.5, class 2 twice the normal weights, class 3 10x.
-        loss = weighted_categorical_crossentropy(weights)
-        model.compile(loss=loss,optimizer='adam')
-    """
-    
-    weights = K.variable(weights)
-        
-    def loss(y_true, y_pred):
-        # scale predictions so that the class probas of each sample sum to 1
-        y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
-        # clip to prevent NaN's and Inf's
-        y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
-        # calc
-        loss = y_true * K.log(y_pred) * weights
-        loss = -K.sum(loss, -1)
-        return loss
-    
-    return loss
-
-weights = np.array([3, 1])
-w_ce_loss = weighted_categorical_crossentropy(weights)
         
 def CreateSegNet(input_shape, n_labels, kernel=3, pool_size=(2, 2), output_mode="softmax"):
     # encoder
@@ -201,7 +161,7 @@ def main(args):
                          workers=1,
                          max_queue_size=20)
 
-    segnet.save_weights("../MTI/LIP_SegNet.hdf5")
+    segnet.save_weights("../weights/MTI_SegNet.hdf5")
     print("saving weight done..")
 
     #json_string = segnet.to_json()
@@ -212,22 +172,22 @@ if __name__ == "__main__":
     # command line argments
     parser = argparse.ArgumentParser(description="SegNet LIP dataset")
     parser.add_argument("--train_list",
-            default="../MTI/TrainVal_images/train_id.txt",
+            default="../dataset/training_dataset/TrainVal_images/train_id.txt",
             help="train list path")
     parser.add_argument("--trainimg_dir",
-            default="../MTI/TrainVal_images/train_images/",
+            default="../dataset/training_dataset/TrainVal_images/train_images/",
             help="train image dir path")
     parser.add_argument("--trainmsk_dir",
-            default="../MTI/TrainVal_parsing_annotations/train_segmentations/",
+            default="../dataset/training_dataset/TrainVal_parsing_annotations/train_segmentations/",
             help="train mask dir path")
     parser.add_argument("--val_list",
-            default="../MTI/TrainVal_images/val_id.txt",
+            default="../dataset/training_dataset/TrainVal_images/val_id.txt",
             help="val list path")
     parser.add_argument("--valimg_dir",
-            default="../MTI/TrainVal_images/val_images/",
+            default="../dataset/training_dataset/TrainVal_images/val_images/",
             help="val image dir path")
     parser.add_argument("--valmsk_dir",
-            default="../MTI/TrainVal_parsing_annotations/val_segmentations/",
+            default="../dataset/training_dataset/TrainVal_parsing_annotations/val_segmentations/",
             help="val mask dir path")
     parser.add_argument("--batch_size",
             default=10,

@@ -9,10 +9,10 @@ from PIL import Image
 import glob, os
 
 #CONFIGURATION
-BG_FOLDER = "backgrounds/"
-FG_FOLDER = "foregrounds/"
-GEN_FOLDER = "virtual_images/"
-MASK_FOLDER = "virtual_masks/"
+BG_FOLDER = "../dataset/backgrounds/"
+FG_FOLDER = "../dataset/foregrounds/"
+GEN_FOLDER = "../dataset/virtual_images/"
+MASK_FOLDER = "../dataset/virtual_masks/"
 IMG_EXT = ".png"
 MIN_FG_IMAGES = 1
 MAX_FG_IMAGES = 4
