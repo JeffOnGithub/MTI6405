@@ -7,6 +7,7 @@
 from random import randint
 from PIL import Image
 import glob, os
+from histogram_matching import histogram_matching
 
 #CONFIGURATION
 BG_FOLDER = "../dataset/backgrounds/"
@@ -16,7 +17,7 @@ MASK_FOLDER = "../dataset/virtual_masks/"
 IMG_EXT = ".png"
 MIN_FG_IMAGES = 1
 MAX_FG_IMAGES = 4
-HOW_MANY_IMAGES = 10
+HOW_MANY_IMAGES = 100
 IMG_HEIGHT = 256
 IMG_WIDTH = 256
 
@@ -54,10 +55,14 @@ for a in range(0, HOW_MANY_IMAGES):
     #Add a random number of foreground elements
     for b in range(0, randint(MIN_FG_IMAGES, MAX_FG_IMAGES) + 1):
         
-        #Load a foreground image and resize
+        #Load a foreground image and resize randomly
         im_fg = foregrounds[randint(0, len(foregrounds) - 1)]
-        im_fg = im_fg.resize((int(IMG_WIDTH/2), int(IMG_HEIGHT/2)))
+        resize_factor = randint(2, 4)
+        im_fg = im_fg.resize((int(IMG_WIDTH/resize_factor), int(IMG_HEIGHT/resize_factor)))
         fg_width, fg_height = im_fg.size
+        
+        #Match foreground histogram to looks like background histogram
+        im_fg = histogram_matching(im_fg, im_bg)
         
         #Convert black to transparent
         im_fg = im_fg.convert("RGBA")
@@ -66,6 +71,8 @@ for a in range(0, HOW_MANY_IMAGES):
             for x in range(fg_width):
                 if pixdata_fg[x, y] == (0, 0, 0, 255):
                     pixdata_fg[x, y] = (0, 0, 0, 0)
+                    
+
         
         #Paste foreground on background and mask using foreground as mask
         #Get a random position
@@ -85,5 +92,13 @@ for a in range(0, HOW_MANY_IMAGES):
     
     #Display / save the generated photo and its mask
     #im_bg.show()
-    im_bg.save(GEN_FOLDER + "virtual_image-" + str(a) + ".jpg", "JPEG")
-    im_mask.save(MASK_FOLDER + "virtual_image-" + str(a) + ".png", "PNG", compress_level=0)
+    im_bg.save(GEN_FOLDER + str(a) + ".jpg", "JPEG")
+    im_mask.save(MASK_FOLDER + str(a) + ".png", "PNG", compress_level=0)
+    
+#Generate id list
+with open(GEN_FOLDER + "id.txt", "w") as text_file:
+    for a in range(0, HOW_MANY_IMAGES): 
+        print(a, file=text_file)
+
+    
+    

@@ -172,7 +172,7 @@ if __name__ == "__main__":
     # command line argments
     parser = argparse.ArgumentParser(description="SegNet LIP dataset")
     parser.add_argument("--train_list",
-            default="../dataset/training_dataset/TrainVal_images/train_id.txt",
+            default="../dataset/training_dataset/TrainVal_images/train_images/id.txt",
             help="train list path")
     parser.add_argument("--trainimg_dir",
             default="../dataset/training_dataset/TrainVal_images/train_images/",
@@ -181,7 +181,7 @@ if __name__ == "__main__":
             default="../dataset/training_dataset/TrainVal_parsing_annotations/train_segmentations/",
             help="train mask dir path")
     parser.add_argument("--val_list",
-            default="../dataset/training_dataset/TrainVal_images/val_id.txt",
+            default="../dataset/training_dataset/TrainVal_images/val_images/id.txt",
             help="val list path")
     parser.add_argument("--valimg_dir",
             default="../dataset/training_dataset/TrainVal_images/val_images/",

@@ -22,12 +22,12 @@ def data_gen_small(img_dir, mask_dir, lists, batch_size, dims, n_labels):
             labels = []
             for i in ix:
                 # images
-                original_img = cv2.imread(img_dir + lists.iloc[i, 0]+".jpg")[:, :, ::-1]
+                original_img = cv2.imread(img_dir + str(lists.iloc[i, 0]) + ".jpg")[:, :, ::-1]
                 resized_img = cv2.resize(original_img, dims)
                 array_img = img_to_array(resized_img)
                 
                 # masks
-                original_mask = cv2.imread(mask_dir + lists.iloc[i, 0] + '.png')
+                original_mask = cv2.imread(mask_dir + str(lists.iloc[i, 0]) + '.png')
                 resized_mask = cv2.resize(original_mask, (dims[0], dims[1]))
                 
                 #Flip randomly images and masks
