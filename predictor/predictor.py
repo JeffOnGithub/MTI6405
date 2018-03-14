@@ -53,30 +53,17 @@ results_comb = np.hstack( (np.asarray(i) for i in result_imgs ) )
 # Filter/boost the result to generate a binary map
 binary_maps = []
 for image in result_imgs:
-    filtered = np.zeros([IMG_WIDTH, IMG_HEIGHT])
-    threshold = 3
-    
-    for x in range(1, IMG_WIDTH - 1):
-        for y in range(1, IMG_HEIGHT - 1):
-            this_cell = 0
-            for delta_x in range (-1, 2):
-                for delta_y in range(-1, 2):
-                    this_cell += image[x + delta_x, y + delta_y]
-            if this_cell > threshold:
-                filtered[x, y] = 1
-    
-    boosted = np.zeros([IMG_WIDTH, IMG_HEIGHT])
-    threshold = 20
-    
-    for x in range(2, IMG_WIDTH - 2):
-        for y in range(2, IMG_HEIGHT - 2):
-            this_cell = 0
-            for delta_x in range (-2, 3):
-                for delta_y in range(-2, 3):
-                    this_cell += filtered[x + delta_x, y + delta_y]
-            if this_cell > threshold:
-                boosted[x, y] = 1
-    
+    #Build 3x3 flat kernel
+    kernel = np.ones((3,3),np.float) / 9
+    #Apply to image
+    convulted = cv2.filter2D(image, -1, kernel)
+    #Threshold
+    filtered = cv2.threshold(convulted, 0.9, 1, cv2.THRESH_BINARY_INV)[1]
+    #Reapply kernel
+    reconvulted = cv2.filter2D(filtered, -1, kernel)
+    #New threshold
+    boosted = cv2.threshold(reconvulted, 0.5, 1, cv2.THRESH_BINARY_INV)[1]
+    #Append result
     binary_maps.append(boosted)
 
 print("Filtering/Boosting done")
@@ -92,16 +79,16 @@ for i in range(len(binary_maps)):
     performance = [0, 0, 0, 0]
     for x in range(0, IMG_WIDTH):
         for y in range(0, IMG_HEIGHT):
-            if binary_maps[i][x][y] == 1.0 and truth_maps[i][x][y][1] == 1.0:
+            if binary_maps[i][x][y] >= 0.5 and truth_maps[i][x][y][1] == 1.0:
                 diff[x,y] = [0, 1, 0]
                 performance[0] += 1
-            elif binary_maps[i][x][y] == 0.0 and truth_maps[i][x][y][1] == 0.0:
+            elif binary_maps[i][x][y] < 0.5 and truth_maps[i][x][y][1] == 0.0:
                 diff[x,y] = [0, 0, 0]
                 performance[1] += 1
-            elif binary_maps[i][x][y] == 0.0 and truth_maps[i][x][y][1] == 1.0:
+            elif binary_maps[i][x][y] < 0.5 and truth_maps[i][x][y][1] == 1.0:
                 diff[x,y] = [1, 1, 0]
                 performance[2] += 1
-            elif binary_maps[i][x][y] == 1.0 and truth_maps[i][x][y][1] == 0.0:
+            elif binary_maps[i][x][y] >= 0.5 and truth_maps[i][x][y][1] == 0.0:
                 diff[x,y] = [1, 0, 0]
                 performance[3] += 1
     map_diffs.append(diff)
