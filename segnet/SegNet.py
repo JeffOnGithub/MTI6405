@@ -151,7 +151,7 @@ def main(args):
 
     segnet.compile(loss=args.loss, optimizer=args.optimizer, metrics=["categorical_accuracy"])
     
-    #segnet.load_weights('LIP_SegNet.hdf5')
+    segnet.load_weights('../weights/MTI_SegNet.hdf5')
         
     segnet.fit_generator(train_gen, 
                          steps_per_epoch=args.epoch_steps, 
@@ -162,7 +162,7 @@ def main(args):
                          max_queue_size=20)
 
     segnet.save_weights("../weights/MTI_SegNet.hdf5")
-    print("saving weight done..")
+    print("saving weights done..")
 
     #json_string = segnet.to_json()
     #open("../MTI/LIP_SegNet.json", "w").write(json_string)

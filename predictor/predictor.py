@@ -57,14 +57,15 @@ results_comb = np.hstack( (np.asarray(i) for i in result_imgs ) )
 # Filter/boost the result to generate a binary map
 binary_maps = []
 for image in result_imgs:
-    #Build 3x3 flat kernel
-    kernel = np.ones((3,3),np.float) / 9
+    #Build flat kernels
+    kernel3x3 = np.ones((3,3),np.float) / 9
+    kernel5x5 = np.ones((5,5),np.float) / 25
     #Apply to image
-    convulted = cv2.filter2D(image, -1, kernel)
+    convulted = cv2.filter2D(image, -1, kernel3x3)
     #Threshold
-    filtered = cv2.threshold(convulted, 0.9, 1, cv2.THRESH_BINARY_INV)[1]
+    filtered = cv2.threshold(convulted, 0.7, 1, cv2.THRESH_BINARY_INV)[1]
     #Reapply kernel
-    reconvulted = cv2.filter2D(filtered, -1, kernel)
+    reconvulted = cv2.filter2D(filtered, -1, kernel5x5)
     #New threshold
     boosted = cv2.threshold(reconvulted, 0.5, 1, cv2.THRESH_BINARY_INV)[1]
     #Append result
