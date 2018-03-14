@@ -6,6 +6,7 @@ from SegNet import CreateSegNet
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
+import time
 
 #CONFIGURATION
 TEST_FOLDER = "../test/"
@@ -35,6 +36,9 @@ segnet = CreateSegNet((IMG_WIDTH, IMG_HEIGHT, 3), 2, 3, (2, 2), "softmax")
 print("Segnet built")
 segnet.load_weights('../weights/MTI_SegNet.hdf5')
 print("Weights loaded")
+
+print('Timer started')
+start_time = time.time()
 
 # Run images in the network
 result = segnet.predict(np_pred_imgs)
@@ -67,6 +71,10 @@ for image in result_imgs:
     binary_maps.append(boosted)
 
 print("Filtering/Boosting done")
+
+print('Timer stopped')
+print('Total time: ' + str(time.time() - start_time) + ' seconds')
+print('Time/image: ' + str((time.time() - start_time) / HOW_MANY_IMAGES) + ' seconds')
 
 # Generate a combined images of all binary maps
 maps_comb = np.asarray(np.hstack( (np.asarray(i) for i in binary_maps ) ), dtype=np.float32)
