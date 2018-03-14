@@ -80,6 +80,10 @@ print('Time/image: ' + str((time.time() - start_time) / HOW_MANY_IMAGES) + ' sec
 maps_comb = np.asarray(np.hstack( (np.asarray(i) for i in binary_maps ) ), dtype=np.float32)
 #plt.imsave('combined_maps', maps_comb)
 
+#Clear result text file
+with open(RESULTS_FOLDER + "combined.txt", "w") as text_file:
+    print('')
+        
 # Compare predicted map to truth map
 map_diffs = []
 for i in range(len(binary_maps)):
