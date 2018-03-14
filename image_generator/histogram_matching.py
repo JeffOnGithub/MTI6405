@@ -15,8 +15,9 @@ def histogram_matching(source_img, reference_img):
     
     source = source_img.ravel()
     
+    #Horrible hack to remove all the black zones in the foreground images
+    #Add only non-black (0,0,0) pixels
     filtered = []
-    
     for x in range(0, source.size, 3):
         if source[x:x+2] != (0, 0, 0):
             filtered.append(source[x])

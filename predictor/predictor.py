@@ -9,6 +9,7 @@ import cv2
 
 #CONFIGURATION
 TEST_FOLDER = "../test/"
+RESULTS_FOLDER = "../results/"
 HOW_MANY_IMAGES = 30
 IMG_HEIGHT = 256
 IMG_WIDTH = 256
@@ -88,17 +89,26 @@ maps_comb = np.asarray(np.hstack( (np.asarray(i) for i in binary_maps ) ), dtype
 map_diffs = []
 for i in range(len(binary_maps)):
     diff = np.zeros([IMG_WIDTH, IMG_HEIGHT, 3])
+    performance = [0, 0, 0, 0]
     for x in range(0, IMG_WIDTH):
         for y in range(0, IMG_HEIGHT):
             if binary_maps[i][x][y] == 1.0 and truth_maps[i][x][y][1] == 1.0:
                 diff[x,y] = [0, 1, 0]
+                performance[0] += 1
             elif binary_maps[i][x][y] == 0.0 and truth_maps[i][x][y][1] == 0.0:
-                diff[x,y] = [0, 0, 0]    
+                diff[x,y] = [0, 0, 0]
+                performance[1] += 1
             elif binary_maps[i][x][y] == 0.0 and truth_maps[i][x][y][1] == 1.0:
                 diff[x,y] = [1, 1, 0]
+                performance[2] += 1
             elif binary_maps[i][x][y] == 1.0 and truth_maps[i][x][y][1] == 0.0:
                 diff[x,y] = [1, 0, 0]
+                performance[3] += 1
     map_diffs.append(diff)
+
+    #Save result in numerical form to text file
+    with open(RESULTS_FOLDER + "combined.txt", "a") as text_file:
+        print(performance, file=text_file)
 
 print("Maps compared")
 
@@ -115,6 +125,6 @@ imgs_to_stack = [imgs_comb, results_comb, maps_comb, diffs_comb]
 imgs_total = np.vstack( (np.asarray(i) for i in imgs_to_stack ) )
 
 # Save result
-plt.imsave('../results/combined.png', imgs_total)
+plt.imsave(RESULTS_FOLDER + 'combined.png', imgs_total)
 
 print("Result compilation saved")
