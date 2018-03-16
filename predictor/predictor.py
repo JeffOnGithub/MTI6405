@@ -83,59 +83,68 @@ with open(RESULTS_FOLDER + "combined.txt", "w") as text_file:
     print('')
 
 with open(RESULTS_FOLDER + "combined.txt", "a") as text_file:
-        print(str(time.time() - start_time), file=text_file)
-        print(str((time.time() - start_time) / HOW_MANY_IMAGES), file=text_file)
+    print(str(time.time() - start_time), file=text_file)
+    print(str((time.time() - start_time) / HOW_MANY_IMAGES), file=text_file)
 
 # Generate a combined images of all binary maps
 maps_comb = np.asarray(np.hstack( (np.asarray(i) for i in binary_maps ) ), dtype=np.float32)
 #plt.imsave('combined_maps', maps_comb)
 
-# Compare predicted map to truth map
-map_diffs = []
-for i in range(len(binary_maps)):
-    diff = np.zeros([IMG_WIDTH, IMG_HEIGHT, 3])
-    performance = [0, 0, 0, 0, 0, 0]
-    for x in range(0, IMG_WIDTH):
-        for y in range(0, IMG_HEIGHT):
-            if binary_maps[i][x][y] >= 0.5 and truth_maps[i][x][y][1] == 1.0:
-                diff[x,y] = [0, 1, 0]
-                performance[0] += 1
-            elif binary_maps[i][x][y] < 0.5 and truth_maps[i][x][y][1] == 0.0:
-                diff[x,y] = [0, 0, 0]
-                performance[1] += 1
-            elif binary_maps[i][x][y] < 0.5 and truth_maps[i][x][y][1] == 1.0:
-                diff[x,y] = [1, 1, 0]
-                performance[2] += 1
-            elif binary_maps[i][x][y] >= 0.5 and truth_maps[i][x][y][1] == 0.0:
-                diff[x,y] = [1, 0, 0]
-                performance[3] += 1
-    map_diffs.append(diff)
+def compare_images(compared_image, truth_image):
+    # Compare predicted map to truth map
+    all_diffs = []
+    for i in range(len(compared_image)):
+        diff = np.zeros([IMG_WIDTH, IMG_HEIGHT, 3])
+        performance = [0, 0, 0, 0, 0, 0]
+        for x in range(0, IMG_WIDTH):
+            for y in range(0, IMG_HEIGHT):
+                if compared_image[i][x][y] >= 0.5 and truth_image[i][x][y][1] == 1.0:
+                    diff[x,y] = [0, 1, 0]
+                    performance[0] += 1
+                elif compared_image[i][x][y] < 0.5 and truth_image[i][x][y][1] == 0.0:
+                    diff[x,y] = [0, 0, 0]
+                    performance[1] += 1
+                elif compared_image[i][x][y] < 0.5 and truth_image[i][x][y][1] == 1.0:
+                    diff[x,y] = [1, 1, 0]
+                    performance[2] += 1
+                elif compared_image[i][x][y] >= 0.5 and truth_image[i][x][y][1] == 0.0:
+                    diff[x,y] = [1, 0, 0]
+                    performance[3] += 1
+        all_diffs.append(diff)
+    
+        #Save result in numerical form to text file
+        #Number of foreground pixels
+        nb_fg_px = np.sum(truth_image[i][:,:,1])
+        #% of correctly identified fg pixels
+        performance[4] = performance[0] / nb_fg_px
+        #Number of background pixels
+        nb_bg_px = IMG_HEIGHT * IMG_WIDTH - nb_fg_px
+        #% of correctly identified bg pixels
+        performance[5] = performance[1] / nb_bg_px
+    
+        with open(RESULTS_FOLDER + "combined.txt", "a") as text_file:
+            print(performance, file=text_file)
+        
+    return all_diffs
 
-    #Save result in numerical form to text file
-    #Number of foreground pixels
-    nb_fg_px = np.sum(truth_maps[i][:,:,1])
-    #% of correctly identified fg pixels
-    performance[4] = performance[0] / nb_fg_px
-    #Number of background pixels
-    nb_bg_px = IMG_HEIGHT * IMG_WIDTH - nb_fg_px
-    #% of correctly identified bg pixels
-    performance[5] = performance[1] / nb_bg_px
-
-    with open(RESULTS_FOLDER + "combined.txt", "a") as text_file:
-        print(performance, file=text_file)
-
-print("Maps compared")
 
 # Generate a combined images of all binary maps
-diffs_comb = np.asarray(np.hstack( (np.asarray(i) for i in map_diffs ) ), dtype=np.float32)
+segnet_diffs = compare_images(result_imgs, truth_maps)
+segnet_diffs_comb = np.asarray(np.hstack( (np.asarray(i) for i in segnet_diffs ) ), dtype=np.float32)
+
+# Generate a combined images of all binary maps
+map_diffs = compare_images(binary_maps, truth_maps)
+final_diffs_comb = np.asarray(np.hstack( (np.asarray(i) for i in map_diffs ) ), dtype=np.float32)
 #plt.imsave('combined_diffs.png', diffs_comb)
+
+print("Maps compared")
 
 # Stack combined images
 imgs_comb = cv2.cvtColor(imgs_comb, cv2.COLOR_BGR2RGB) / 255.0
 results_comb = cv2.cvtColor(results_comb, cv2.COLOR_GRAY2RGB)
 maps_comb = cv2.cvtColor(maps_comb, cv2.COLOR_GRAY2RGB)
 
-imgs_to_stack = [imgs_comb, results_comb, maps_comb, diffs_comb]
+imgs_to_stack = [imgs_comb, results_comb, segnet_diffs_comb, maps_comb, final_diffs_comb]
 imgs_total = np.vstack( (np.asarray(i) for i in imgs_to_stack ) )
 
 # Save result
