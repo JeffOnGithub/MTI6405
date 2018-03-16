@@ -89,7 +89,7 @@ with open(RESULTS_FOLDER + "combined.txt", "w") as text_file:
 map_diffs = []
 for i in range(len(binary_maps)):
     diff = np.zeros([IMG_WIDTH, IMG_HEIGHT, 3])
-    performance = [0, 0, 0, 0]
+    performance = [0, 0, 0, 0, 0, 0]
     for x in range(0, IMG_WIDTH):
         for y in range(0, IMG_HEIGHT):
             if binary_maps[i][x][y] >= 0.5 and truth_maps[i][x][y][1] == 1.0:
@@ -107,6 +107,15 @@ for i in range(len(binary_maps)):
     map_diffs.append(diff)
 
     #Save result in numerical form to text file
+    #Number of foreground pixels
+    nb_fg_px = np.sum(truth_maps[i][:,:,1])
+    #% of correctly identified fg pixels
+    performance[4] = performance[0] / nb_fg_px
+    #Number of background pixels
+    nb_bg_px = IMG_HEIGHT * IMG_WIDTH - nb_fg_px
+    #% of correctly identified bg pixels
+    performance[5] = performance[1] / nb_bg_px
+    
     with open(RESULTS_FOLDER + "combined.txt", "a") as text_file:
         print(performance, file=text_file)
 
