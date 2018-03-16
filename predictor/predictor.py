@@ -73,18 +73,23 @@ for image in result_imgs:
 
 print("Filtering/Boosting done")
 
+#Timer results
 print('Timer stopped')
 print('Total time: ' + str(time.time() - start_time) + ' seconds')
 print('Time/image: ' + str((time.time() - start_time) / HOW_MANY_IMAGES) + ' seconds')
+
+#Clear result text file
+with open(RESULTS_FOLDER + "combined.txt", "w") as text_file:
+    print('')
+
+with open(RESULTS_FOLDER + "combined.txt", "a") as text_file:
+        print(str(time.time() - start_time), file=text_file)
+        print(str((time.time() - start_time) / HOW_MANY_IMAGES), file=text_file)
 
 # Generate a combined images of all binary maps
 maps_comb = np.asarray(np.hstack( (np.asarray(i) for i in binary_maps ) ), dtype=np.float32)
 #plt.imsave('combined_maps', maps_comb)
 
-#Clear result text file
-with open(RESULTS_FOLDER + "combined.txt", "w") as text_file:
-    print('')
-        
 # Compare predicted map to truth map
 map_diffs = []
 for i in range(len(binary_maps)):
@@ -115,7 +120,7 @@ for i in range(len(binary_maps)):
     nb_bg_px = IMG_HEIGHT * IMG_WIDTH - nb_fg_px
     #% of correctly identified bg pixels
     performance[5] = performance[1] / nb_bg_px
-    
+
     with open(RESULTS_FOLDER + "combined.txt", "a") as text_file:
         print(performance, file=text_file)
 
