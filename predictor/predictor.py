@@ -14,6 +14,9 @@ RESULTS_FOLDER = "../results/"
 HOW_MANY_IMAGES = 30
 IMG_HEIGHT = 256
 IMG_WIDTH = 256
+WEIGHT = '../weights/MTI_SegNet-60.hdf5'
+THRESHOLD_1 = 0.7
+THRESHOLD_2 = 0.5
 
 # Load ground truth maps
 truth_maps = []
@@ -34,7 +37,7 @@ imgs_comb = np.hstack( (np.asarray(i) for i in pred_imgs ) )
 # Build a network and load weights
 segnet = CreateSegNet((IMG_WIDTH, IMG_HEIGHT, 3), 2, 3, (2, 2), "softmax")
 print("Segnet built")
-segnet.load_weights('../weights/MTI_SegNet.hdf5')
+segnet.load_weights(WEIGHT)
 print("Weights loaded")
 
 print('Timer started')
@@ -63,11 +66,11 @@ for image in result_imgs:
     #Apply to image
     convulted = cv2.filter2D(image, -1, kernel3x3)
     #Threshold
-    filtered = cv2.threshold(convulted, 0.7, 1, cv2.THRESH_BINARY_INV)[1]
+    filtered = cv2.threshold(convulted, THRESHOLD_1, 1, cv2.THRESH_BINARY_INV)[1]
     #Reapply kernel
     reconvulted = cv2.filter2D(filtered, -1, kernel5x5)
     #New threshold
-    boosted = cv2.threshold(reconvulted, 0.5, 1, cv2.THRESH_BINARY_INV)[1]
+    boosted = cv2.threshold(reconvulted, THRESHOLD_2, 1, cv2.THRESH_BINARY_INV)[1]
     #Append result
     binary_maps.append(boosted)
 
