@@ -14,6 +14,7 @@ RESULTS_FOLDER = "../results/"
 HOW_MANY_IMAGES = 30
 IMG_HEIGHT = 256
 IMG_WIDTH = 256
+
 WEIGHT = '../weights/MTI_SegNet-60.hdf5'
 THRESHOLD_1 = 0.7
 THRESHOLD_2 = 0.5
@@ -83,7 +84,7 @@ print('Time/image: ' + str((time.time() - start_time) / HOW_MANY_IMAGES) + ' sec
 
 #Clear result text file
 with open(RESULTS_FOLDER + "combined.txt", "w") as text_file:
-    print('')
+    pass
 
 with open(RESULTS_FOLDER + "combined.txt", "a") as text_file:
     print(str(time.time() - start_time), file=text_file)
@@ -96,6 +97,7 @@ maps_comb = np.asarray(np.hstack( (np.asarray(i) for i in binary_maps ) ), dtype
 def compare_images(compared_image, truth_image):
     # Compare predicted map to truth map
     all_diffs = []
+    all_perfs = []
     for i in range(len(compared_image)):
         diff = np.zeros([IMG_WIDTH, IMG_HEIGHT, 3])
         performance = [0, 0, 0, 0, 0, 0]
@@ -114,6 +116,7 @@ def compare_images(compared_image, truth_image):
                     diff[x,y] = [1, 0, 0]
                     performance[3] += 1
         all_diffs.append(diff)
+        all_perfs.append(performance)
     
         #Save result in numerical form to text file
         #Number of foreground pixels
@@ -128,19 +131,25 @@ def compare_images(compared_image, truth_image):
         with open(RESULTS_FOLDER + "combined.txt", "a") as text_file:
             print(performance, file=text_file)
         
-    return all_diffs
+    return (all_diffs, np.asarray(all_perfs))
 
 
 # Generate a combined images of all binary maps
-segnet_diffs = compare_images(result_imgs, truth_maps)
+(segnet_diffs, segnet_perfs) = compare_images(result_imgs, truth_maps)
 segnet_diffs_comb = np.asarray(np.hstack( (np.asarray(i) for i in segnet_diffs ) ), dtype=np.float32)
 
 # Generate a combined images of all binary maps
-map_diffs = compare_images(binary_maps, truth_maps)
+(map_diffs, maps_perfs) = compare_images(binary_maps, truth_maps)
 final_diffs_comb = np.asarray(np.hstack( (np.asarray(i) for i in map_diffs ) ), dtype=np.float32)
 #plt.imsave('combined_diffs.png', diffs_comb)
 
 print("Maps compared")
+
+print("Segnet results foreground " + str(1 - np.average(segnet_perfs[:,4])))
+print("Segnet results background " + str(1 - np.average(segnet_perfs[:,5])))
+
+print("Politic results foreground " + str(1 - np.average(maps_perfs[:,4])))
+print("Politic results background " + str(1 - np.average(maps_perfs[:,5])))
 
 # Stack combined images
 imgs_comb = cv2.cvtColor(imgs_comb, cv2.COLOR_BGR2RGB) / 255.0
