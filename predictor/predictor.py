@@ -16,7 +16,7 @@ IMG_HEIGHT = 256
 IMG_WIDTH = 256
 
 WEIGHT = '../weights/MTI_SegNet-60.hdf5'
-THRESHOLD_1 = 0.7
+THRESHOLD_1 = 0.3
 THRESHOLD_2 = 0.5
 
 # Load ground truth maps
@@ -59,6 +59,7 @@ results_comb = np.hstack( (np.asarray(i) for i in result_imgs ) )
 #plt.imsave('combined_output.png', results_comb)
 
 # Filter/boost the result to generate a binary map
+filtered_maps = []
 binary_maps = []
 for image in result_imgs:
     #Build flat kernels
@@ -67,11 +68,12 @@ for image in result_imgs:
     #Apply to image
     convulted = cv2.filter2D(image, -1, kernel3x3)
     #Threshold
-    filtered = cv2.threshold(convulted, THRESHOLD_1, 1, cv2.THRESH_BINARY_INV)[1]
+    filtered = cv2.threshold(convulted, THRESHOLD_1, 1, cv2.THRESH_BINARY)[1]
+    filtered_maps.append(filtered)
     #Reapply kernel
     reconvulted = cv2.filter2D(filtered, -1, kernel5x5)
     #New threshold
-    boosted = cv2.threshold(reconvulted, THRESHOLD_2, 1, cv2.THRESH_BINARY_INV)[1]
+    boosted = cv2.threshold(reconvulted, THRESHOLD_2, 1, cv2.THRESH_BINARY)[1]
     #Append result
     binary_maps.append(boosted)
 
@@ -90,7 +92,8 @@ with open(RESULTS_FOLDER + "combined.txt", "a") as text_file:
     print(str(time.time() - start_time), file=text_file)
     print(str((time.time() - start_time) / HOW_MANY_IMAGES), file=text_file)
 
-# Generate a combined images of all binary maps
+# Generate a combined images of all filtered and binary maps
+filtered_comb = np.asarray(np.hstack( (np.asarray(i) for i in filtered_maps ) ), dtype=np.float32)
 maps_comb = np.asarray(np.hstack( (np.asarray(i) for i in binary_maps ) ), dtype=np.float32)
 #plt.imsave('combined_maps', maps_comb)
 
@@ -134,11 +137,15 @@ def compare_images(compared_image, truth_image):
     return (all_diffs, np.asarray(all_perfs))
 
 
-# Generate a combined images of all binary maps
+# Generate a combined images of all compared segnet maps
 (segnet_diffs, segnet_perfs) = compare_images(result_imgs, truth_maps)
 segnet_diffs_comb = np.asarray(np.hstack( (np.asarray(i) for i in segnet_diffs ) ), dtype=np.float32)
 
-# Generate a combined images of all binary maps
+# Generate a combined images of all compared filtered maps
+(filtered_diffs, filtered_perfs) = compare_images(filtered_maps, truth_maps)
+filtered_diffs_comb = np.asarray(np.hstack( (np.asarray(i) for i in filtered_diffs ) ), dtype=np.float32)
+
+# Generate a combined images of all compared binary maps
 (map_diffs, maps_perfs) = compare_images(binary_maps, truth_maps)
 final_diffs_comb = np.asarray(np.hstack( (np.asarray(i) for i in map_diffs ) ), dtype=np.float32)
 #plt.imsave('combined_diffs.png', diffs_comb)
@@ -154,9 +161,10 @@ print("Politic results background " + str(1 - np.average(maps_perfs[:,5])))
 # Stack combined images
 imgs_comb = cv2.cvtColor(imgs_comb, cv2.COLOR_BGR2RGB) / 255.0
 results_comb = cv2.cvtColor(results_comb, cv2.COLOR_GRAY2RGB)
+filtered_comb = cv2.cvtColor(filtered_comb, cv2.COLOR_GRAY2RGB)
 maps_comb = cv2.cvtColor(maps_comb, cv2.COLOR_GRAY2RGB)
 
-imgs_to_stack = [imgs_comb, results_comb, segnet_diffs_comb, maps_comb, final_diffs_comb]
+imgs_to_stack = [imgs_comb, results_comb, segnet_diffs_comb, filtered_comb, filtered_diffs_comb, maps_comb, final_diffs_comb]
 imgs_total = np.vstack( (np.asarray(i) for i in imgs_to_stack ) )
 
 # Save result
